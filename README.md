@@ -26,8 +26,9 @@ Perfil **dev** usa H2 em memória. Para recomendações com score de compatibili
 
 | Método | Endpoint | Descrição |
 |--------|----------|-----------|
-| POST | `/api/v1/auth/register` | Cria conta |
-| POST | `/api/v1/auth/login` | Login (retorna JWT) |
+| POST | `/api/v1/auth/register` | Cria conta (senha local) |
+| POST | `/api/v1/auth/login` | Login local (retorna JWT da API) |
+| POST | `/api/v1/auth/idp` | Login ou cadastro com o token do provedor de identidade |
 | GET | `/api/v1/auth/me` | Usuário autenticado |
 | POST | `/api/v1/candidates/profiles` | Cria perfil (candidato autenticado) |
 | PUT | `/api/v1/candidates/profiles/me` | Atualiza perfil |

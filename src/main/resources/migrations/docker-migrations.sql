@@ -91,3 +91,6 @@ WHERE location IS NOT NULL
     'ac','al','ap','am','ba','ce','df','es','go','ma','mt','ms','mg',
     'pa','pb','pr','pe','pi','rj','rn','rs','ro','rr','sc','sp','se','to'
   );
+
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS idp_subject VARCHAR(128);
+CREATE UNIQUE INDEX IF NOT EXISTS accounts_idp_subject_key ON accounts (idp_subject);

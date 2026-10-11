@@ -197,7 +197,7 @@ public class CandidateProfileService {
 		}
 
 		if (request.cursoArea() != null && !request.cursoArea().isBlank()) {
-			profile.setStudyArea(request.cursoArea().trim());
+			profile.setStudyArea(textSanitizerService.sanitize(request.cursoArea().trim()));
 		} else {
 			profile.setStudyArea(null);
 		}
@@ -236,7 +236,7 @@ public class CandidateProfileService {
 		}
 
 		return new CandidateExperience(
-				experience.cargo(),
+				sanitizeFreeText(experience.cargo()),
 				SeniorityLevel.fromKey(experience.senioridade()),
 				experience.inicioMes(),
 				experience.inicioAno(),
@@ -247,10 +247,17 @@ public class CandidateProfileService {
 	}
 
 	private void mapProjects(ProfileCreateRequest request, AnonymousProfile profile) {
-		request.projetosDestaque().forEach(projectDescription -> {
-			String sanitized = textSanitizerService.sanitize(projectDescription);
-			profile.addProject(new CandidateProject(sanitized));
-		});
+		request.projetosDestaque().forEach(projectDescription ->
+				profile.addProject(new CandidateProject(sanitizeFreeText(projectDescription)))
+		);
+	}
+
+	private String sanitizeFreeText(String value) {
+		String sanitized = textSanitizerService.sanitize(value == null ? null : value.trim());
+		if (sanitized == null || sanitized.isBlank()) {
+			return "[conteúdo removido]";
+		}
+		return sanitized;
 	}
 
 	private void mapLanguages(List<LanguageProficiencyRequest> idiomas, AnonymousProfile profile) {

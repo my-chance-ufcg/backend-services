@@ -7,6 +7,7 @@ CREATE TABLE accounts (
     password_hash VARCHAR(255) NOT NULL,
     full_name VARCHAR(255) NOT NULL,
     phone VARCHAR(30),
+    idp_subject VARCHAR(128) UNIQUE,
     role VARCHAR(20) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );

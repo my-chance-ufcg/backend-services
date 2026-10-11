@@ -31,6 +31,9 @@ public class Account {
 	@Column(name = "phone", length = 30)
 	private String phone;
 
+	@Column(name = "idp_subject", unique = true, length = 128)
+	private String idpSubject;
+
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, length = 20)
 	private UserRole role;
@@ -104,6 +107,14 @@ public class Account {
 
 	public void setPhone(String phone) {
 		this.phone = phone;
+	}
+
+	public String getIdpSubject() {
+		return idpSubject;
+	}
+
+	public void setIdpSubject(String idpSubject) {
+		this.idpSubject = idpSubject;
 	}
 
 	public UserRole getRole() {

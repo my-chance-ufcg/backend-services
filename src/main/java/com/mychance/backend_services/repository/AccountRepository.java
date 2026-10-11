@@ -10,5 +10,7 @@ public interface AccountRepository extends JpaRepository<Account, UUID> {
 
 	Optional<Account> findByEmailIgnoreCase(String email);
 
+	Optional<Account> findByIdpSubject(String idpSubject);
+
 	boolean existsByEmailIgnoreCase(String email);
 }

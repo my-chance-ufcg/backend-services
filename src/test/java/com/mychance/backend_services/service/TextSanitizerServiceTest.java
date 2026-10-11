@@ -42,4 +42,30 @@ class TextSanitizerServiceTest {
 	void returnsBlankInputAsIs(String input) {
 		assertThat(sanitizer.sanitize(input)).isEqualTo(input);
 	}
+
+	@Test
+	void removesObfuscatedEmailAndBareDomains() {
+		String result = sanitizer.sanitize(
+				"Fale em ana [at] empresa [dot] com ou em portfolio.dev/ana e mailto:ana@empresa.com"
+		);
+
+		assertThat(result).doesNotContain("ana");
+		assertThat(result).doesNotContain("portfolio.dev");
+		assertThat(result).doesNotContain("mailto:");
+		assertThat(result).contains("[email removido]");
+		assertThat(result).contains("[link removido]");
+	}
+
+	@Test
+	void removesCompanyNamesWithLegalSuffixOrExplicitMarker() {
+		String result = sanitizer.sanitize(
+				"Atuei na empresa Nubank e depois na Acme Ltda com Java e Spring Boot."
+		);
+
+		assertThat(result).contains("[empresa removida]");
+		assertThat(result).doesNotContain("Nubank");
+		assertThat(result).doesNotContain("Acme");
+		assertThat(result).contains("Java");
+		assertThat(result).contains("Spring Boot");
+	}
 }

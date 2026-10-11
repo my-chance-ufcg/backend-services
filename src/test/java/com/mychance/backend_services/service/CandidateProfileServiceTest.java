@@ -76,6 +76,38 @@ class CandidateProfileServiceTest {
 	}
 
 	@Test
+	void sanitizesExperienceTitleAndStudyAreaBeforePersisting() {
+		Account account = accountRepository.save(AccountTestBuilder.candidateAccount("sanitize-exp@test.local"));
+		ProfileCreateRequest base = ProfileRequestTestBuilder.basicProfile(
+				Map.of("python", 3),
+				List.of(ProfileRequestTestBuilder.currentExperience("Engenheiro na Acme Ltda", "junior", 12))
+		);
+		ProfileCreateRequest request = new ProfileCreateRequest(
+				base.competencias(),
+				base.experiencias(),
+				base.projetosDestaque(),
+				base.nivelEscolaridade(),
+				base.estado(),
+				"Computação na empresa Nubank",
+				base.pretensaoSalarialMinima(),
+				base.modalidadesPreferidas(),
+				base.vinculosPreferidos(),
+				base.idiomas()
+		);
+
+		candidateProfileService.createProfile(account.getId(), request);
+
+		AnonymousProfile profile = anonymousProfileRepository.findByCandidateId(account.getId()).orElseThrow();
+		assertThat(profile.getExperiences()).singleElement()
+				.extracting(experience -> experience.getRoleTitle())
+				.satisfies(title -> {
+					assertThat(title).contains("[empresa removida]");
+					assertThat(title).doesNotContain("Acme");
+				});
+		assertThat(profile.getStudyArea()).contains("[empresa removida]").doesNotContain("Nubank");
+	}
+
+	@Test
 	void persistsSkillsExperiencesAndProjects() {
 		Account account = accountRepository.save(AccountTestBuilder.candidateAccount("persist-test@test.local"));
 		ProfileCreateRequest request = ProfileRequestTestBuilder.basicProfile(

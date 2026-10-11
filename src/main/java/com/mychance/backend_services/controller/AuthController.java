@@ -1,6 +1,7 @@
 package com.mychance.backend_services.controller;
 
 import com.mychance.backend_services.domain.enums.UserRole;
+import com.mychance.backend_services.dto.request.IdpAuthRequest;
 import com.mychance.backend_services.dto.request.LoginRequest;
 import com.mychance.backend_services.dto.request.RegisterRequest;
 import com.mychance.backend_services.dto.response.AuthResponse;
@@ -43,6 +44,11 @@ public class AuthController {
 	@PostMapping("/login")
 	public AuthResponse login(@Valid @RequestBody LoginRequest request) {
 		return authService.login(request);
+	}
+
+	@PostMapping("/idp")
+	public AuthResponse idp(@Valid @RequestBody IdpAuthRequest request) {
+		return authService.authenticateWithIdp(request);
 	}
 
 	@GetMapping("/me")
