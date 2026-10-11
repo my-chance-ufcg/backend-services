@@ -1,10 +1,13 @@
 package com.mychance.backend_services.controller;
 
+import com.mychance.backend_services.domain.enums.UserRole;
 import com.mychance.backend_services.dto.request.LoginRequest;
 import com.mychance.backend_services.dto.request.RegisterRequest;
 import com.mychance.backend_services.dto.response.AuthResponse;
 import com.mychance.backend_services.security.AuthenticatedUser;
 import com.mychance.backend_services.service.AuthService;
+import com.mychance.backend_services.telemetry.ProductEvent;
+import com.mychance.backend_services.telemetry.ProductTelemetry;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,15 +23,21 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
 	private final AuthService authService;
+	private final ProductTelemetry productTelemetry;
 
-	public AuthController(AuthService authService) {
+	public AuthController(AuthService authService, ProductTelemetry productTelemetry) {
 		this.authService = authService;
+		this.productTelemetry = productTelemetry;
 	}
 
 	@PostMapping("/register")
 	@ResponseStatus(HttpStatus.CREATED)
 	public AuthResponse register(@Valid @RequestBody RegisterRequest request) {
-		return authService.register(request);
+		AuthResponse response = authService.register(request);
+		if (UserRole.CANDIDATE.name().equals(response.role())) {
+			productTelemetry.record(ProductEvent.CADASTRO_CANDIDATO, "account_id", response.userId().toString());
+		}
+		return response;
 	}
 
 	@PostMapping("/login")

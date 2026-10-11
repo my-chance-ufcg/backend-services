@@ -6,6 +6,8 @@ import com.mychance.backend_services.dto.response.JobDetailResponse;
 import com.mychance.backend_services.dto.response.JobSummaryResponse;
 import com.mychance.backend_services.security.AuthenticatedUser;
 import com.mychance.backend_services.service.JobVacancyService;
+import com.mychance.backend_services.telemetry.ProductEvent;
+import com.mychance.backend_services.telemetry.ProductTelemetry;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,9 +28,11 @@ import java.util.UUID;
 public class JobVacancyController {
 
 	private final JobVacancyService jobVacancyService;
+	private final ProductTelemetry productTelemetry;
 
-	public JobVacancyController(JobVacancyService jobVacancyService) {
+	public JobVacancyController(JobVacancyService jobVacancyService, ProductTelemetry productTelemetry) {
 		this.jobVacancyService = jobVacancyService;
+		this.productTelemetry = productTelemetry;
 	}
 
 	@PostMapping
@@ -37,7 +41,13 @@ public class JobVacancyController {
 			@AuthenticationPrincipal AuthenticatedUser user,
 			@Valid @RequestBody JobCreateRequest request
 	) {
-		return jobVacancyService.createJob(user.id(), request);
+		JobCreateResponse response = jobVacancyService.createJob(user.id(), request);
+		productTelemetry.record(
+				ProductEvent.CADASTRO_VAGA,
+				"vaga_id", response.vagaId().toString(),
+				"recruiter_id", user.id().toString()
+		);
+		return response;
 	}
 
 	@GetMapping("/mine")

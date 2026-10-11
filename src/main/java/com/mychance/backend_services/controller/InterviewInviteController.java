@@ -7,6 +7,8 @@ import com.mychance.backend_services.dto.response.InviteResponse;
 import com.mychance.backend_services.security.AuthenticatedUser;
 import com.mychance.backend_services.service.InterviewInviteService;
 import com.mychance.backend_services.service.JobVacancyService;
+import com.mychance.backend_services.telemetry.ProductEvent;
+import com.mychance.backend_services.telemetry.ProductTelemetry;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -27,13 +29,16 @@ public class InterviewInviteController {
 
 	private final InterviewInviteService interviewInviteService;
 	private final JobVacancyService jobVacancyService;
+	private final ProductTelemetry productTelemetry;
 
 	public InterviewInviteController(
 			InterviewInviteService interviewInviteService,
-			JobVacancyService jobVacancyService
+			JobVacancyService jobVacancyService,
+			ProductTelemetry productTelemetry
 	) {
 		this.interviewInviteService = interviewInviteService;
 		this.jobVacancyService = jobVacancyService;
+		this.productTelemetry = productTelemetry;
 	}
 
 	@PostMapping("/jobs/{jobId}/invites")
@@ -44,7 +49,14 @@ public class InterviewInviteController {
 			@Valid @RequestBody InviteCreateRequest request
 	) {
 		jobVacancyService.getOwnedJob(user.id(), jobId);
-		return interviewInviteService.sendInvite(jobId, request);
+		InviteResponse response = interviewInviteService.sendInvite(jobId, request);
+		productTelemetry.record(
+				ProductEvent.CONVITE_ENVIADO,
+				"convite_id", response.conviteId().toString(),
+				"vaga_id", response.vagaId().toString(),
+				"candidato_id", response.candidatoId()
+		);
+		return response;
 	}
 
 	@PostMapping("/invites/{inviteId}/accept")
@@ -52,7 +64,13 @@ public class InterviewInviteController {
 			@AuthenticationPrincipal AuthenticatedUser user,
 			@PathVariable UUID inviteId
 	) {
-		return interviewInviteService.acceptInvite(inviteId, user.id());
+		InviteResponse response = interviewInviteService.acceptInvite(inviteId, user.id());
+		productTelemetry.record(
+				ProductEvent.ACEITE_CONVITE,
+				"convite_id", response.conviteId().toString(),
+				"vaga_id", response.vagaId().toString()
+		);
+		return response;
 	}
 
 	@PostMapping("/invites/{inviteId}/reject")
@@ -60,7 +78,13 @@ public class InterviewInviteController {
 			@AuthenticationPrincipal AuthenticatedUser user,
 			@PathVariable UUID inviteId
 	) {
-		return interviewInviteService.rejectInvite(inviteId, user.id());
+		InviteResponse response = interviewInviteService.rejectInvite(inviteId, user.id());
+		productTelemetry.record(
+				ProductEvent.REJEICAO_CONVITE,
+				"convite_id", response.conviteId().toString(),
+				"vaga_id", response.vagaId().toString()
+		);
+		return response;
 	}
 
 	@PostMapping("/invites/{inviteId}/schedule")

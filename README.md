@@ -38,7 +38,9 @@ Perfil **dev** usa H2 em memória. Para recomendações com score de compatibili
 | POST | `/api/v1/invites/{inviteId}/accept` | Aceita convite |
 | POST | `/api/v1/invites/{inviteId}/reject` | Recusa convite |
 | GET | `/api/v1/candidates/me/invites` | Lista convites |
-| GET | `/health` | Health check |
+| GET | `/health` | Saúde da API e do banco (`200` se o banco responde, `503` se não) |
+| GET | `/actuator/health` | Probe do Actuator |
+| GET | `/actuator/prometheus` | Contadores de uso, sem dados pessoais |
 
 Detalhes dos contratos JSON: [`docs/api-contracts.md`](docs/api-contracts.md)
 
@@ -51,6 +53,23 @@ mychance.nlp.enabled=true
 ```
 
 Em produção, use as variáveis `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`, `MYCHANCE_NLP_BASE_URL`, `MYCHANCE_NLP_ENABLED`, `MYCHANCE_JWT_SECRET`.
+
+## Eventos de produto
+
+Cada ação de uso bem-sucedida gera uma linha no logger `com.mychance.product` e incrementa o contador `mychance.product.events` (tag `event`). O log leva só identificadores, nunca nome, e-mail, telefone ou texto livre.
+
+| Evento | Quando |
+|--------|--------|
+| `cadastro_candidato` | Conta criada com papel candidato |
+| `cadastro_vaga` | Vaga criada |
+| `matching_gerado` | Ranking de uma vaga calculado (`resultados` = quantidade) |
+| `convite_enviado` | Convite enviado |
+| `aceite_convite` | Candidato aceita o convite |
+| `rejeicao_convite` | Candidato recusa o convite |
+
+Exemplo: `event=cadastro_vaga vaga_id=<uuid> recruiter_id=<uuid>`
+
+Dados de demonstração e o reset da demo não passam por esses endpoints, então não entram na contagem.
 
 ## Produção
 
