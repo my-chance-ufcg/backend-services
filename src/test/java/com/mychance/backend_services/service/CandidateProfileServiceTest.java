@@ -3,6 +3,7 @@ package com.mychance.backend_services.service;
 import com.mychance.backend_services.domain.entity.Account;
 import com.mychance.backend_services.domain.entity.AnonymousProfile;
 import com.mychance.backend_services.dto.request.ProfileCreateRequest;
+import com.mychance.backend_services.dto.response.MyProfileResponse;
 import com.mychance.backend_services.exception.InvalidSkillException;
 import com.mychance.backend_services.repository.AccountRepository;
 import com.mychance.backend_services.repository.AnonymousProfileRepository;
@@ -62,7 +63,10 @@ class CandidateProfileServiceTest {
 				base.pretensaoSalarialMinima(),
 				base.modalidadesPreferidas(),
 				base.vinculosPreferidos(),
-				base.idiomas()
+				base.idiomas(),
+				null,
+				null,
+				null
 		);
 
 		candidateProfileService.createProfile(account.getId(), request);
@@ -92,7 +96,10 @@ class CandidateProfileServiceTest {
 				base.pretensaoSalarialMinima(),
 				base.modalidadesPreferidas(),
 				base.vinculosPreferidos(),
-				base.idiomas()
+				base.idiomas(),
+				null,
+				null,
+				null
 		);
 
 		candidateProfileService.createProfile(account.getId(), request);
@@ -128,5 +135,37 @@ class CandidateProfileServiceTest {
 		assertThat(profile.getLanguages()).hasSize(2);
 		assertThat(profile.getPreferredModalities()).isNotEmpty();
 		assertThat(profile.getCandidate().getFullName()).isEqualTo("Candidato Teste");
+	}
+
+	@Test
+	void persistsAdvancedFiltersAndUsesSalaryBandAsMinimum() {
+		Account account = accountRepository.save(AccountTestBuilder.candidateAccount("filters-test@test.local"));
+		ProfileCreateRequest base = ProfileRequestTestBuilder.basicProfile(
+				Map.of("python", 3),
+				List.of(ProfileRequestTestBuilder.currentExperience("Dev", "junior", 12))
+		);
+		ProfileCreateRequest request = new ProfileCreateRequest(
+				base.competencias(),
+				base.experiencias(),
+				base.projetosDestaque(),
+				base.nivelEscolaridade(),
+				base.estado(),
+				base.cursoArea(),
+				3000,
+				base.modalidadesPreferidas(),
+				base.vinculosPreferidos(),
+				base.idiomas(),
+				"7k_a_10k",
+				List.of("Comunicação", "trabalho_equipe"),
+				List.of("Plano de Saúde", "vale_refeicao")
+		);
+
+		candidateProfileService.createProfile(account.getId(), request);
+
+		MyProfileResponse profile = candidateProfileService.getMyProfile(account.getId());
+		assertThat(profile.faixaSalarial()).isEqualTo("7k_a_10k");
+		assertThat(profile.pretensaoSalarialMinima()).isEqualTo(7001);
+		assertThat(profile.softSkills()).containsExactly("Comunicação", "Trabalho em equipe");
+		assertThat(profile.beneficios()).containsExactly("Plano de Saúde", "Vale Refeição (VR)");
 	}
 }

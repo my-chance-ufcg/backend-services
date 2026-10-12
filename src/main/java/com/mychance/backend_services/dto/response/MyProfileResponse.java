@@ -16,6 +16,9 @@ public record MyProfileResponse(
 		@JsonProperty("pretensao_salarial_minima") Integer pretensaoSalarialMinima,
 		@JsonProperty("modalidades_preferidas") List<String> modalidadesPreferidas,
 		@JsonProperty("vinculos_preferidos") List<String> vinculosPreferidos,
-		@JsonProperty("idiomas") List<LanguageProficiencyResponse> idiomas
+		@JsonProperty("idiomas") List<LanguageProficiencyResponse> idiomas,
+		@JsonProperty("faixa_salarial") String faixaSalarial,
+		@JsonProperty("soft_skills") List<String> softSkills,
+		@JsonProperty("beneficios") List<String> beneficios
 ) {
 }

@@ -4,6 +4,7 @@ import com.mychance.backend_services.dto.nlp.MatchingRankRequest;
 import com.mychance.backend_services.dto.nlp.MatchingRankResponse;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 
 public final class NlpMatchingTestStub {
@@ -20,7 +21,8 @@ public final class NlpMatchingTestStub {
 							evaluation.score(),
 							evaluation.label(),
 							evaluation.approved(),
-							evaluation.filterScore()
+							evaluation.filterScore(),
+							List.of()
 					);
 				})
 				.sorted(Comparator.comparingDouble(MatchingRankResponse.RankedCandidatePayload::compatibilidadeScore).reversed())

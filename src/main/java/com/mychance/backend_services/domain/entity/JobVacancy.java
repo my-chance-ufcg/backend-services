@@ -1,20 +1,29 @@
 package com.mychance.backend_services.domain.entity;
 
+import com.mychance.backend_services.domain.enums.Benefit;
 import com.mychance.backend_services.domain.enums.EmploymentType;
+import com.mychance.backend_services.domain.enums.SalaryRange;
 import com.mychance.backend_services.domain.enums.SeniorityLevel;
+import com.mychance.backend_services.domain.enums.SoftSkill;
 import com.mychance.backend_services.domain.enums.WorkModality;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -56,6 +65,22 @@ public class JobVacancy {
 
 	@Column(name = "max_salary")
 	private Integer maxSalary;
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "salary_range", length = 30)
+	private SalaryRange salaryRange;
+
+	@ElementCollection(fetch = FetchType.LAZY)
+	@CollectionTable(name = "job_soft_skills", joinColumns = @JoinColumn(name = "job_id"))
+	@Enumerated(EnumType.STRING)
+	@Column(name = "soft_skill", nullable = false, length = 40)
+	private Set<SoftSkill> softSkills = new HashSet<>();
+
+	@ElementCollection(fetch = FetchType.LAZY)
+	@CollectionTable(name = "job_benefits", joinColumns = @JoinColumn(name = "job_id"))
+	@Enumerated(EnumType.STRING)
+	@Column(name = "benefit", nullable = false, length = 40)
+	private Set<Benefit> benefits = new HashSet<>();
 
 	@OneToMany(mappedBy = "jobVacancy", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<JobRequirement> requirements = new ArrayList<>();
@@ -198,6 +223,36 @@ public class JobVacancy {
 
 	public void setMaxSalary(Integer maxSalary) {
 		this.maxSalary = maxSalary;
+	}
+
+	public SalaryRange getSalaryRange() {
+		return salaryRange;
+	}
+
+	public void setSalaryRange(SalaryRange salaryRange) {
+		this.salaryRange = salaryRange;
+	}
+
+	public Set<SoftSkill> getSoftSkills() {
+		return softSkills;
+	}
+
+	public void setSoftSkills(Set<SoftSkill> softSkills) {
+		this.softSkills.clear();
+		if (softSkills != null) {
+			this.softSkills.addAll(softSkills);
+		}
+	}
+
+	public Set<Benefit> getBenefits() {
+		return benefits;
+	}
+
+	public void setBenefits(Set<Benefit> benefits) {
+		this.benefits.clear();
+		if (benefits != null) {
+			this.benefits.addAll(benefits);
+		}
 	}
 
 	public void clearRequirements() {

@@ -17,6 +17,9 @@ public record JobDetailResponse(
 		@JsonProperty("salario_minimo") Integer salarioMinimo,
 		@JsonProperty("salario_maximo") Integer salarioMaximo,
 		@JsonProperty("requisitos") List<JobRequirementDetailResponse> requisitos,
-		@JsonProperty("idiomas") List<JobLanguageRequirementDetailResponse> idiomas
+		@JsonProperty("idiomas") List<JobLanguageRequirementDetailResponse> idiomas,
+		@JsonProperty("faixa_salarial") String faixaSalarial,
+		@JsonProperty("soft_skills") List<String> softSkills,
+		@JsonProperty("beneficios") List<String> beneficios
 ) {
 }

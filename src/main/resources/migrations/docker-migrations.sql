@@ -92,5 +92,28 @@ WHERE location IS NOT NULL
     'pa','pb','pr','pe','pi','rj','rn','rs','ro','rr','sc','sp','se','to'
   );
 
+ALTER TABLE anonymous_profiles ADD COLUMN IF NOT EXISTS salary_range VARCHAR(30);
+ALTER TABLE job_vacancies ADD COLUMN IF NOT EXISTS salary_range VARCHAR(30);
+
+CREATE TABLE IF NOT EXISTS profile_soft_skills (
+    profile_id UUID NOT NULL REFERENCES anonymous_profiles(id),
+    soft_skill VARCHAR(40) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS profile_desired_benefits (
+    profile_id UUID NOT NULL REFERENCES anonymous_profiles(id),
+    benefit VARCHAR(40) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS job_soft_skills (
+    job_id UUID NOT NULL REFERENCES job_vacancies(id),
+    soft_skill VARCHAR(40) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS job_benefits (
+    job_id UUID NOT NULL REFERENCES job_vacancies(id),
+    benefit VARCHAR(40) NOT NULL
+);
+
 ALTER TABLE accounts ADD COLUMN IF NOT EXISTS idp_subject VARCHAR(128);
 CREATE UNIQUE INDEX IF NOT EXISTS accounts_idp_subject_key ON accounts (idp_subject);

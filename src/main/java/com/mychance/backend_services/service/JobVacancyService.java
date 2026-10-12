@@ -3,12 +3,15 @@ package com.mychance.backend_services.service;
 import com.mychance.backend_services.domain.entity.JobLanguageRequirement;
 import com.mychance.backend_services.domain.entity.JobRequirement;
 import com.mychance.backend_services.domain.entity.JobVacancy;
+import com.mychance.backend_services.domain.enums.Benefit;
 import com.mychance.backend_services.domain.enums.BrazilianState;
 import com.mychance.backend_services.domain.enums.EmploymentType;
 import com.mychance.backend_services.domain.enums.LanguageLevel;
 import com.mychance.backend_services.domain.enums.LanguageName;
+import com.mychance.backend_services.domain.enums.SalaryRange;
 import com.mychance.backend_services.domain.enums.SeniorityLevel;
 import com.mychance.backend_services.domain.enums.SkillName;
+import com.mychance.backend_services.domain.enums.SoftSkill;
 import com.mychance.backend_services.domain.enums.WorkModality;
 import com.mychance.backend_services.dto.request.JobCreateRequest;
 import com.mychance.backend_services.dto.request.JobLanguageRequirementRequest;
@@ -32,28 +35,34 @@ import java.util.UUID;
 public class JobVacancyService {
 
 	private final JobVacancyRepository jobVacancyRepository;
+	private final TextSanitizerService textSanitizerService;
 
-	public JobVacancyService(JobVacancyRepository jobVacancyRepository) {
+	public JobVacancyService(
+			JobVacancyRepository jobVacancyRepository,
+			TextSanitizerService textSanitizerService
+	) {
 		this.jobVacancyRepository = jobVacancyRepository;
+		this.textSanitizerService = textSanitizerService;
 	}
 
 	@Transactional
 	public JobCreateResponse createJob(UUID recruiterId, JobCreateRequest request) {
-		validateSalaryRange(request.salarioMinimo(), request.salarioMaximo());
+		SalaryResolution salary = resolveSalary(request);
 		WorkModality modality = parseModality(request.modalidade());
 		String location = normalizeLocation(request.local(), modality);
 		JobVacancy jobVacancy = new JobVacancy(
 				request.titulo(),
 				recruiterId,
-				request.descricao(),
+				sanitizeDescription(request.descricao()),
 				request.empresaInstituicao().trim(),
 				modality,
 				parseEmploymentType(request.tipoVinculo()),
 				location,
 				parseSeniority(request.senioridade()),
-				request.salarioMinimo(),
-				request.salarioMaximo()
+				salary.minimum(),
+				salary.maximum()
 		);
+		applyAdvancedFilters(request, salary.range(), jobVacancy);
 		mapRequirements(request.requisitos(), jobVacancy);
 		mapLanguages(request.idiomas(), jobVacancy);
 
@@ -93,19 +102,20 @@ public class JobVacancyService {
 
 	@Transactional
 	public JobCreateResponse updateJob(UUID recruiterId, UUID jobId, JobCreateRequest request) {
-		validateSalaryRange(request.salarioMinimo(), request.salarioMaximo());
+		SalaryResolution salary = resolveSalary(request);
 		JobVacancy jobVacancy = getOwnedJob(recruiterId, jobId);
 		WorkModality modality = parseModality(request.modalidade());
 		String location = normalizeLocation(request.local(), modality);
 		jobVacancy.setTitle(request.titulo());
-		jobVacancy.setDescription(request.descricao());
+		jobVacancy.setDescription(sanitizeDescription(request.descricao()));
 		jobVacancy.setCompanyName(request.empresaInstituicao().trim());
 		jobVacancy.setWorkModality(modality);
 		jobVacancy.setEmploymentType(parseEmploymentType(request.tipoVinculo()));
 		jobVacancy.setLocation(location);
 		jobVacancy.setSeniorityLevel(parseSeniority(request.senioridade()));
-		jobVacancy.setMinSalary(request.salarioMinimo());
-		jobVacancy.setMaxSalary(request.salarioMaximo());
+		jobVacancy.setMinSalary(salary.minimum());
+		jobVacancy.setMaxSalary(salary.maximum());
+		applyAdvancedFilters(request, salary.range(), jobVacancy);
 		jobVacancy.clearRequirements();
 		jobVacancy.clearLanguageRequirements();
 		mapRequirements(request.requisitos(), jobVacancy);
@@ -165,6 +175,28 @@ public class JobVacancyService {
 		return SeniorityLevel.fromKey(value);
 	}
 
+	private void applyAdvancedFilters(JobCreateRequest request, SalaryRange range, JobVacancy jobVacancy) {
+		jobVacancy.setSalaryRange(range);
+		jobVacancy.setSoftSkills(SoftSkill.parseAll(request.softSkills()));
+		jobVacancy.setBenefits(Benefit.parseAll(request.beneficios()));
+	}
+
+	private SalaryResolution resolveSalary(JobCreateRequest request) {
+		if (request.salarioMaximo() != null) {
+			validateSalaryRange(request.salarioMinimo(), request.salarioMaximo());
+			SalaryRange range = blankToNull(request.faixaSalarial()) == null
+					? null
+					: SalaryRange.fromKey(request.faixaSalarial());
+			return new SalaryResolution(request.salarioMinimo(), request.salarioMaximo(), range);
+		}
+		if (blankToNull(request.faixaSalarial()) != null) {
+			SalaryRange range = SalaryRange.fromKey(request.faixaSalarial());
+			validateSalaryRange(range.getMinimum(), range.getMaximum());
+			return new SalaryResolution(range.getMinimum(), range.getMaximum(), range);
+		}
+		throw new IllegalArgumentException("Informe o salário máximo ou a faixa salarial.");
+	}
+
 	private void validateSalaryRange(Integer minSalary, Integer maxSalary) {
 		if (minSalary != null && maxSalary != null && minSalary > maxSalary) {
 			throw new IllegalArgumentException("O salário mínimo não pode ser maior que o máximo.");
@@ -221,7 +253,24 @@ public class JobVacancyService {
 				jobVacancy.getMinSalary(),
 				jobVacancy.getMaxSalary(),
 				requisitos,
-				idiomas
+				idiomas,
+				jobVacancy.getSalaryRange() != null ? jobVacancy.getSalaryRange().getKey() : null,
+				jobVacancy.getSoftSkills().stream().map(SoftSkill::getKey).sorted().toList(),
+				jobVacancy.getBenefits().stream().map(Benefit::getKey).sorted().toList()
 		);
+	}
+
+	private String sanitizeDescription(String value) {
+		if (value == null || value.isBlank()) {
+			return value;
+		}
+		String sanitized = textSanitizerService.sanitize(value.trim());
+		if (sanitized == null || sanitized.isBlank()) {
+			return "[conteúdo removido]";
+		}
+		return sanitized;
+	}
+
+	private record SalaryResolution(Integer minimum, Integer maximum, SalaryRange range) {
 	}
 }

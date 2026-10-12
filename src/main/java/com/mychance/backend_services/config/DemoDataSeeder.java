@@ -177,7 +177,10 @@ public class DemoDataSeeder {
 				List.of(
 						new LanguageProficiencyRequest("portugues", "fluente"),
 						new LanguageProficiencyRequest("ingles", "intermediario")
-				)
+				),
+				null,
+				null,
+				null
 		);
 	}
 

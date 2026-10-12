@@ -44,7 +44,10 @@ public final class ProfileRequestTestBuilder {
 				7000,
 				List.of("remoto", "hibrido"),
 				List.of("clt", "bolsa_projeto"),
-				List.of(new LanguageProficiencyRequest("portugues", "fluente"), new LanguageProficiencyRequest("ingles", "intermediario"))
+				List.of(new LanguageProficiencyRequest("portugues", "fluente"), new LanguageProficiencyRequest("ingles", "intermediario")),
+				null,
+				null,
+				null
 		);
 	}
 }

@@ -12,7 +12,8 @@ public record MatchingRankResponse(
 			@JsonProperty("compatibilidade_score") double compatibilidadeScore,
 			@JsonProperty("compatibilidade") String compatibilidade,
 			@JsonProperty("aprovado_filtragem") boolean aprovadoFiltragem,
-			@JsonProperty("score_filtragem") Double scoreFiltragem
+			@JsonProperty("score_filtragem") Double scoreFiltragem,
+			@JsonProperty("explicacao") List<String> explicacao
 	) {
 	}
 }

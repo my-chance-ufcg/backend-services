@@ -22,6 +22,9 @@ public record ProfileCreateRequest(
 		@NotNull @Min(1000) @JsonProperty("pretensao_salarial_minima") Integer pretensaoSalarialMinima,
 		@NotEmpty @JsonProperty("modalidades_preferidas") List<@NotBlank String> modalidadesPreferidas,
 		@NotEmpty @JsonProperty("vinculos_preferidos") List<@NotBlank String> vinculosPreferidos,
-		@NotNull @Valid @JsonProperty("idiomas") List<LanguageProficiencyRequest> idiomas
+		@NotNull @Valid @JsonProperty("idiomas") List<LanguageProficiencyRequest> idiomas,
+		@JsonProperty("faixa_salarial") String faixaSalarial,
+		@JsonProperty("soft_skills") List<String> softSkills,
+		@JsonProperty("beneficios") List<String> beneficios
 ) {
 }

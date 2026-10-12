@@ -47,6 +47,11 @@ public class MatchingRequestBuilder {
 				jobLanguages.put(requirement.getLanguageName().getKey(), requirement.getMinLevel().getRank())
 		);
 
+		List<String> jobSoftSkills = jobVacancy.getSoftSkills().stream()
+				.map(skill -> skill.getKey())
+				.sorted()
+				.toList();
+
 		List<CandidateMatchingPayload> candidatos = profiles.stream()
 				.map(profile -> new CandidateMatchingPayload(
 						PublicIdFormatter.toPublicCandidateId(profile.getId()),
@@ -54,7 +59,8 @@ public class MatchingRequestBuilder {
 						profile.getProjects().size(),
 						weightedExperienceYears(profile),
 						currentSeniorityRank(profile),
-						buildCandidateLanguages(profile)
+						buildCandidateLanguages(profile),
+						profile.getSoftSkills().stream().map(skill -> skill.getKey()).sorted().toList()
 				))
 				.toList();
 
@@ -63,7 +69,8 @@ public class MatchingRequestBuilder {
 				new JobMatchingPayload(
 						competencias,
 						jobVacancy.getSeniorityLevel() != null ? jobVacancy.getSeniorityLevel().getRank() : 0,
-						jobLanguages
+						jobLanguages,
+						jobSoftSkills
 				),
 				candidatos
 		);

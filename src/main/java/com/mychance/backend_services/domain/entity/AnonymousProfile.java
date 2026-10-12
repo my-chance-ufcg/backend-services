@@ -1,8 +1,11 @@
 package com.mychance.backend_services.domain.entity;
 
+import com.mychance.backend_services.domain.enums.Benefit;
 import com.mychance.backend_services.domain.enums.BrazilianState;
 import com.mychance.backend_services.domain.enums.EducationLevel;
 import com.mychance.backend_services.domain.enums.EmploymentType;
+import com.mychance.backend_services.domain.enums.SalaryRange;
+import com.mychance.backend_services.domain.enums.SoftSkill;
 import com.mychance.backend_services.domain.enums.WorkModality;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
@@ -53,6 +56,22 @@ public class AnonymousProfile {
 
 	@Column(name = "salary_expectation_min")
 	private Integer salaryExpectationMin;
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "salary_range", length = 30)
+	private SalaryRange salaryRange;
+
+	@ElementCollection(fetch = FetchType.LAZY)
+	@CollectionTable(name = "profile_soft_skills", joinColumns = @JoinColumn(name = "profile_id"))
+	@Enumerated(EnumType.STRING)
+	@Column(name = "soft_skill", nullable = false, length = 40)
+	private Set<SoftSkill> softSkills = new HashSet<>();
+
+	@ElementCollection(fetch = FetchType.LAZY)
+	@CollectionTable(name = "profile_desired_benefits", joinColumns = @JoinColumn(name = "profile_id"))
+	@Enumerated(EnumType.STRING)
+	@Column(name = "benefit", nullable = false, length = 40)
+	private Set<Benefit> desiredBenefits = new HashSet<>();
 
 	@ElementCollection(fetch = FetchType.LAZY)
 	@CollectionTable(name = "profile_preferred_modalities", joinColumns = @JoinColumn(name = "profile_id"))
@@ -137,6 +156,36 @@ public class AnonymousProfile {
 
 	public void setSalaryExpectationMin(Integer salaryExpectationMin) {
 		this.salaryExpectationMin = salaryExpectationMin;
+	}
+
+	public SalaryRange getSalaryRange() {
+		return salaryRange;
+	}
+
+	public void setSalaryRange(SalaryRange salaryRange) {
+		this.salaryRange = salaryRange;
+	}
+
+	public Set<SoftSkill> getSoftSkills() {
+		return softSkills;
+	}
+
+	public void setSoftSkills(Set<SoftSkill> softSkills) {
+		this.softSkills.clear();
+		if (softSkills != null) {
+			this.softSkills.addAll(softSkills);
+		}
+	}
+
+	public Set<Benefit> getDesiredBenefits() {
+		return desiredBenefits;
+	}
+
+	public void setDesiredBenefits(Set<Benefit> desiredBenefits) {
+		this.desiredBenefits.clear();
+		if (desiredBenefits != null) {
+			this.desiredBenefits.addAll(desiredBenefits);
+		}
 	}
 
 	public Set<WorkModality> getPreferredModalities() {

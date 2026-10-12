@@ -13,7 +13,8 @@ public record MatchingRankRequest(
 	public record JobMatchingPayload(
 			@JsonProperty("competencias") Map<String, JobRequirementPayload> competencias,
 			@JsonProperty("senioridade") int senioridade,
-			@JsonProperty("idiomas") Map<String, Integer> idiomas
+			@JsonProperty("idiomas") Map<String, Integer> idiomas,
+			@JsonProperty("competencias_comportamentais") List<String> competenciasComportamentais
 	) {
 	}
 
@@ -30,7 +31,8 @@ public record MatchingRankRequest(
 			@JsonProperty("projetos") int projetos,
 			@JsonProperty("anos_experiencia") double anosExperiencia,
 			@JsonProperty("senioridade") int senioridade,
-			@JsonProperty("idiomas") Map<String, Integer> idiomas
+			@JsonProperty("idiomas") Map<String, Integer> idiomas,
+			@JsonProperty("competencias_comportamentais") List<String> competenciasComportamentais
 	) {
 	}
 }

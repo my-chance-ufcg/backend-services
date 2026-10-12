@@ -7,13 +7,16 @@ import com.mychance.backend_services.domain.entity.CandidateExperience;
 import com.mychance.backend_services.domain.entity.CandidateLanguage;
 import com.mychance.backend_services.domain.entity.CandidateProject;
 import com.mychance.backend_services.domain.entity.CandidateSkill;
+import com.mychance.backend_services.domain.enums.Benefit;
 import com.mychance.backend_services.domain.enums.BrazilianState;
 import com.mychance.backend_services.domain.enums.EducationLevel;
 import com.mychance.backend_services.domain.enums.EmploymentType;
 import com.mychance.backend_services.domain.enums.LanguageLevel;
 import com.mychance.backend_services.domain.enums.LanguageName;
+import com.mychance.backend_services.domain.enums.SalaryRange;
 import com.mychance.backend_services.domain.enums.SeniorityLevel;
 import com.mychance.backend_services.domain.enums.SkillName;
+import com.mychance.backend_services.domain.enums.SoftSkill;
 import com.mychance.backend_services.domain.enums.UserRole;
 import com.mychance.backend_services.domain.enums.WorkModality;
 import com.mychance.backend_services.dto.request.ExperienceRequest;
@@ -126,8 +129,18 @@ public class CandidateProfileService {
 				.sorted()
 				.toList();
 
-		List<String> vinculos = profile.getPreferredEmploymentTypes().stream()
+		List<String> vinculos = 				profile.getPreferredEmploymentTypes().stream()
 				.map(EmploymentType::getKey)
+				.sorted()
+				.toList();
+
+		List<String> softSkills = profile.getSoftSkills().stream()
+				.map(SoftSkill::getKey)
+				.sorted()
+				.toList();
+
+		List<String> beneficios = profile.getDesiredBenefits().stream()
+				.map(Benefit::getKey)
 				.sorted()
 				.toList();
 
@@ -149,7 +162,10 @@ public class CandidateProfileService {
 				profile.getSalaryExpectationMin(),
 				modalidades,
 				vinculos,
-				idiomas
+				idiomas,
+				profile.getSalaryRange() != null ? profile.getSalaryRange().getKey() : null,
+				softSkills,
+				beneficios
 		);
 	}
 
@@ -174,9 +190,24 @@ public class CandidateProfileService {
 		mapProjects(request, profile);
 		mapLanguages(request.idiomas(), profile);
 		mapAnonymizedMetadata(request, profile);
-		profile.setSalaryExpectationMin(request.pretensaoSalarialMinima());
+		applyCompensationPreferences(request, profile);
 		profile.setPreferredModalities(parseModalities(request.modalidadesPreferidas()));
 		profile.setPreferredEmploymentTypes(parseEmploymentTypes(request.vinculosPreferidos()));
+	}
+
+	private void applyCompensationPreferences(ProfileCreateRequest request, AnonymousProfile profile) {
+		SalaryRange salaryRange = null;
+		if (request.faixaSalarial() != null && !request.faixaSalarial().isBlank()) {
+			salaryRange = SalaryRange.fromKey(request.faixaSalarial());
+		}
+		profile.setSalaryRange(salaryRange);
+		if (salaryRange != null && salaryRange.getMinimum() != null) {
+			profile.setSalaryExpectationMin(salaryRange.getMinimum());
+		} else {
+			profile.setSalaryExpectationMin(request.pretensaoSalarialMinima());
+		}
+		profile.setSoftSkills(SoftSkill.parseAll(request.softSkills()));
+		profile.setDesiredBenefits(Benefit.parseAll(request.beneficios()));
 	}
 
 	private void mapAnonymizedMetadata(ProfileCreateRequest request, AnonymousProfile profile) {
@@ -317,6 +348,8 @@ public class CandidateProfileService {
 		profile.getLanguages().size();
 		profile.getPreferredModalities().size();
 		profile.getPreferredEmploymentTypes().size();
+		profile.getSoftSkills().size();
+		profile.getDesiredBenefits().size();
 	}
 
 	AnonymousProfile findProfileByPublicIdForInternalUse(String publicCandidateId) {

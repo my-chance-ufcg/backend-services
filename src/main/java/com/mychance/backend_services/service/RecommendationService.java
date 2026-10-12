@@ -58,6 +58,7 @@ public class RecommendationService {
 		JobVacancy jobVacancy = jobVacancyRepository.findByIdWithRequirements(jobId)
 				.orElseThrow(() -> new JobNotFoundException(jobId));
 		jobVacancy.getLanguageRequirements().size();
+		jobVacancy.getSoftSkills().size();
 
 		Map<String, InviteStatus> inviteStatusByCandidate = interviewInviteRepository.findByJobId(jobId).stream()
 				.collect(Collectors.toMap(
@@ -117,7 +118,11 @@ public class RecommendationService {
 				recommendation.competenciasTecnicas(),
 				recommendation.experiencias(),
 				recommendation.projetosDestaque(),
-				recommendation.conviteStatus()
+				recommendation.conviteStatus(),
+				recommendation.faixaSalarial(),
+				recommendation.softSkills(),
+				recommendation.beneficios(),
+				recommendation.explicacao()
 		);
 	}
 
@@ -189,6 +194,8 @@ public class RecommendationService {
 		profile.getLanguages().size();
 		profile.getPreferredModalities().size();
 		profile.getPreferredEmploymentTypes().size();
+		profile.getSoftSkills().size();
+		profile.getDesiredBenefits().size();
 	}
 
 	private RecommendationResponse toRecommendation(
@@ -232,7 +239,11 @@ public class RecommendationService {
 				competencias,
 				experiencias,
 				projetos,
-				conviteStatus
+				conviteStatus,
+				profile.getSalaryRange() != null ? profile.getSalaryRange().getKey() : null,
+				profile.getSoftSkills().stream().map(skill -> skill.getKey()).sorted().toList(),
+				profile.getDesiredBenefits().stream().map(benefit -> benefit.getKey()).sorted().toList(),
+				ranking.explicacao() == null ? List.of() : ranking.explicacao()
 		);
 	}
 }

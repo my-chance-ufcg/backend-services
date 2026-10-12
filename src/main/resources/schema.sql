@@ -23,7 +23,8 @@ CREATE TABLE anonymous_profiles (
     education_level VARCHAR(50),
     region_state VARCHAR(50),
     study_area VARCHAR(150),
-    salary_expectation_min INT CHECK (salary_expectation_min > 0)
+    salary_expectation_min INT CHECK (salary_expectation_min > 0),
+    salary_range VARCHAR(30)
 );
 
 CREATE TABLE profile_preferred_modalities (
@@ -79,7 +80,28 @@ CREATE TABLE job_vacancies (
     location VARCHAR(150),
     seniority_level VARCHAR(50) NOT NULL,
     min_salary INT CHECK (min_salary > 0),
-    max_salary INT CHECK (max_salary > 0)
+    max_salary INT CHECK (max_salary > 0),
+    salary_range VARCHAR(30)
+);
+
+CREATE TABLE profile_soft_skills (
+    profile_id UUID NOT NULL REFERENCES anonymous_profiles(id),
+    soft_skill VARCHAR(40) NOT NULL
+);
+
+CREATE TABLE profile_desired_benefits (
+    profile_id UUID NOT NULL REFERENCES anonymous_profiles(id),
+    benefit VARCHAR(40) NOT NULL
+);
+
+CREATE TABLE job_soft_skills (
+    job_id UUID NOT NULL REFERENCES job_vacancies(id),
+    soft_skill VARCHAR(40) NOT NULL
+);
+
+CREATE TABLE job_benefits (
+    job_id UUID NOT NULL REFERENCES job_vacancies(id),
+    benefit VARCHAR(40) NOT NULL
 );
 
 CREATE TABLE job_requirements (

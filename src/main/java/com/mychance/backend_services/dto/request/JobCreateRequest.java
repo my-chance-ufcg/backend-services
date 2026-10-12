@@ -19,8 +19,11 @@ public record JobCreateRequest(
 		@Size(max = 150) @JsonProperty("local") String local,
 		@NotBlank @JsonProperty("senioridade") String senioridade,
 		@Min(1) @JsonProperty("salario_minimo") Integer salarioMinimo,
-		@NotNull @Min(1) @JsonProperty("salario_maximo") Integer salarioMaximo,
+		@Min(1) @JsonProperty("salario_maximo") Integer salarioMaximo,
 		@NotEmpty @Valid @JsonProperty("requisitos") List<JobRequirementRequest> requisitos,
-		@NotNull @Valid @JsonProperty("idiomas") List<JobLanguageRequirementRequest> idiomas
+		@NotNull @Valid @JsonProperty("idiomas") List<JobLanguageRequirementRequest> idiomas,
+		@JsonProperty("faixa_salarial") String faixaSalarial,
+		@JsonProperty("soft_skills") List<String> softSkills,
+		@JsonProperty("beneficios") List<String> beneficios
 ) {
 }

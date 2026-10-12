@@ -12,6 +12,10 @@ public record RecommendationResponse(
 		@JsonProperty("competencias_tecnicas") List<String> competenciasTecnicas,
 		@JsonProperty("experiencias") List<ExperienceResponse> experiencias,
 		@JsonProperty("projetos_destaque") List<String> projetosDestaque,
-		@JsonProperty("convite_status") String conviteStatus
+		@JsonProperty("convite_status") String conviteStatus,
+		@JsonProperty("faixa_salarial") String faixaSalarial,
+		@JsonProperty("soft_skills") List<String> softSkills,
+		@JsonProperty("beneficios") List<String> beneficios,
+		@JsonProperty("explicacao") List<String> explicacao
 ) {
 }

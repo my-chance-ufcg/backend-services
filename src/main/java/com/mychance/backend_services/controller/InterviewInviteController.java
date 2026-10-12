@@ -7,6 +7,7 @@ import com.mychance.backend_services.dto.response.InviteResponse;
 import com.mychance.backend_services.security.AuthenticatedUser;
 import com.mychance.backend_services.service.InterviewInviteService;
 import com.mychance.backend_services.service.JobVacancyService;
+import com.mychance.backend_services.telemetry.AuditTrail;
 import com.mychance.backend_services.telemetry.ProductEvent;
 import com.mychance.backend_services.telemetry.ProductTelemetry;
 import jakarta.validation.Valid;
@@ -30,15 +31,18 @@ public class InterviewInviteController {
 	private final InterviewInviteService interviewInviteService;
 	private final JobVacancyService jobVacancyService;
 	private final ProductTelemetry productTelemetry;
+	private final AuditTrail auditTrail;
 
 	public InterviewInviteController(
 			InterviewInviteService interviewInviteService,
 			JobVacancyService jobVacancyService,
-			ProductTelemetry productTelemetry
+			ProductTelemetry productTelemetry,
+			AuditTrail auditTrail
 	) {
 		this.interviewInviteService = interviewInviteService;
 		this.jobVacancyService = jobVacancyService;
 		this.productTelemetry = productTelemetry;
+		this.auditTrail = auditTrail;
 	}
 
 	@PostMapping("/jobs/{jobId}/invites")
@@ -69,6 +73,13 @@ public class InterviewInviteController {
 				ProductEvent.ACEITE_CONVITE,
 				"convite_id", response.conviteId().toString(),
 				"vaga_id", response.vagaId().toString()
+		);
+		auditTrail.record(
+				"revelacao_identidade",
+				"actor_id", user.id().toString(),
+				"convite_id", response.conviteId().toString(),
+				"vaga_id", response.vagaId().toString(),
+				"candidato_id", response.candidatoId()
 		);
 		return response;
 	}
@@ -118,7 +129,9 @@ public class InterviewInviteController {
 
 	@GetMapping("/candidates/me/invites")
 	public List<InviteResponse> listMyInvites(@AuthenticationPrincipal AuthenticatedUser user) {
-		return interviewInviteService.listInvitesForAccount(user.id());
+		List<InviteResponse> invites = interviewInviteService.listInvitesForAccount(user.id());
+		auditRevealedContacts(user, invites);
+		return invites;
 	}
 
 	@GetMapping("/jobs/{jobId}/invites")
@@ -127,6 +140,28 @@ public class InterviewInviteController {
 			@PathVariable UUID jobId
 	) {
 		jobVacancyService.getOwnedJob(user.id(), jobId);
-		return interviewInviteService.listInvitesForJob(jobId);
+		List<InviteResponse> invites = interviewInviteService.listInvitesForJob(jobId);
+		auditRevealedContacts(user, invites);
+		return invites;
+	}
+
+	private void auditRevealedContacts(AuthenticatedUser user, List<InviteResponse> invites) {
+		for (InviteResponse invite : invites) {
+			String dado = invite.candidatoEmail() != null
+					? "contato_candidato"
+					: invite.recruiterEmail() != null ? "contato_recrutador" : null;
+			if (dado == null) {
+				continue;
+			}
+			auditTrail.record(
+					"acesso_dado_pessoal",
+					"actor_id", user.id().toString(),
+					"actor_role", user.role().name(),
+					"convite_id", invite.conviteId().toString(),
+					"vaga_id", invite.vagaId().toString(),
+					"candidato_id", invite.candidatoId(),
+					"dado", dado
+			);
+		}
 	}
 }
